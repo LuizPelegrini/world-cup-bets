@@ -24,7 +24,7 @@ async function bootstrap(){
   // start server
   await fastify.listen({
     port: 3333,
-    host: '0.0.0.0' // so mobile client can access backend
+    /*host: '0.0.0.0'*/ // so mobile client can access backend
   });
 }
 
