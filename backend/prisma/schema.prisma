@@ -16,4 +16,52 @@ model Pool {
   title     String
   code      String   @unique
   createdAt DateTime @default(now())
+  onwerId   String?
+
+  participants Participant[]
+  owner        User?         @relation(fields: [onwerId], references: [id])
+}
+
+model Participant {
+  id     String @id @default(cuid())
+  userId String
+  poolId String
+
+  guesses Guess[]
+  user    User?   @relation(fields: [userId], references: [id])
+  pool    Pool    @relation(fields: [poolId], references: [id])
+
+  @@unique([userId, poolId]) // composed key (a user can only join a pool once)
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  participatingAt Participant[]
+  poolsOwned      Pool[]
+}
+
+model Match {
+  id                    String   @id @default(cuid())
+  date                  DateTime
+  firstTeamCountryCode  String
+  secondTeamCountryCode String
+
+  guesses Guess[]
+}
+
+model Guess {
+  id              String   @id @default(cuid())
+  firstTeamScore  Int
+  secondTeamScore Int
+  createdAt       DateTime @default(now())
+  matchId         String
+  participantId   String
+
+  match       Match       @relation(fields: [matchId], references: [id])
+  participant Participant @relation(fields: [participantId], references: [id])
 }
