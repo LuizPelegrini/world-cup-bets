@@ -1,4 +1,5 @@
-import { GetServerSideProps } from 'next';
+import { GetStaticProps } from 'next';
+import { FormEvent, useState } from 'react';
 import Image from 'next/image';
 
 import { api } from '../lib/axios';
@@ -15,6 +16,28 @@ interface HomeProps {
 }
 
 export default function Home({ poolCount, guessCount, userCount }: HomeProps) {
+  const [poolTitle, setPoolTitle] = useState('');
+
+  async function createPool(event: FormEvent) {
+    event.preventDefault();
+
+    try {
+      const response = await api.post('/pools', {
+        title: poolTitle
+      });
+
+      const { code } = response.data;
+      await navigator.clipboard.writeText(code);
+
+      alert('Pool successfully created, code copied to clipboard!');
+
+      setPoolTitle('');
+    } catch (err) {
+      console.log(err);
+      alert('Failed on creating the pool');
+    }
+  }
+
   return (
     <div className="max-w-[1124px] h-screen mx-auto grid grid-cols-2 gap-28 items-center">
       <main>
@@ -31,12 +54,14 @@ export default function Home({ poolCount, guessCount, userCount }: HomeProps) {
           </strong>
         </div>
 
-        <form className="mt-10 flex gap-2">
+        <form onSubmit={createPool} className="mt-10 flex gap-2" >
           <input
-            className="flex-1 px-6 py-4 rounded bg-gray-800 border border-gray-600 tex-sm"
+            className="flex-1 px-6 py-4 rounded bg-gray-800 border border-gray-600 tex-sm text-gray-100"
             type="text"
             required
             placeholder="What's the pool's name?"
+            onChange={(event) => setPoolTitle(event.target.value)}
+            value={poolTitle}
           />
           <button
             className="bg-yellow-500 px-6 py-4 rounded font-bold text-gray-900 text-sm uppercase hover:bg-yellow-700"
@@ -79,7 +104,7 @@ export default function Home({ poolCount, guessCount, userCount }: HomeProps) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
   const [
     poolCountResponse,
     guessCountResponse,
@@ -95,6 +120,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       poolCount: poolCountResponse.data.count,
       guessCount: guessCountResponse.data.count,
       userCount: userCountResponse.data.count
-    }
+    },
+    revalidate: 10
   };
 };
